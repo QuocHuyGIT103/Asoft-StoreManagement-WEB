@@ -1,0 +1,164 @@
+﻿@model StoreManagementSystem.Models.Invoice
+@{
+    ViewBag.Title = "Thêm Hóa Đơn";
+}
+<div class="container mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Thêm Hóa Đơn Mới</h2>
+    
+    @if (!string.IsNullOrEmpty(ViewBag.Message))
+    {
+        <div class="alert bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+            @ViewBag.Message
+        </div>
+    }
+
+    <form method="post" action="@Url.Action("Add")" class="space-y-6">
+        <div class="form-group">
+            <label for="InvoiceID" class="block text-sm font-medium text-gray-700">Mã Hóa Đơn <span class="text-red-500">*</span></label>
+            <input type="text" 
+                   name="InvoiceID" 
+                   id="InvoiceID" 
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                   required 
+                   pattern="[A-Za-z0-9]+" 
+                   title="Mã không được chứa khoảng trắng, chỉ cho phép chữ và số"
+                   oninput="this.value = this.value.toUpperCase()" />
+        </div>
+        <div class="form-group">
+            <label for="CustomerID" class="block text-sm font-medium text-gray-700">Khách Hàng <span class="text-red-500">*</span></label>
+            <select name="CustomerID" 
+                    id="CustomerID" 
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    required>
+                @foreach (System.Data.DataRow row in ViewBag.Customers.Rows)
+                {
+                    <option value="@row["CustomerID"]">@row["CustomerName"]</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <table class="w-full border-collapse border border-gray-300" id="detailsTable">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-300 p-2 text-sm font-medium text-gray-700">Sản Phẩm</th>
+                        <th class="border border-gray-300 p-2 text-sm font-medium text-gray-700">Số Lượng</th>
+                        <th class="border border-gray-300 p-2 text-sm font-medium text-gray-700">Thành Tiền</th>
+                        <th class="border border-gray-300 p-2 text-sm font-medium text-gray-700">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="border border-gray-300 p-2">
+                            <select name="productIds[]" 
+                                    class="form-control product-select w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    required>
+                                @foreach (System.Data.DataRow row in ViewBag.Products.Rows)
+                                {
+                                    <option value="@row["ProductID"]" data-price="@row["Price"]">@row["ProductName"] (@row["Price"])</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="border border-gray-300 p-2">
+                            <input type="number" 
+                                   name="quantities[]" 
+                                   class="qty-input w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                   min="1" 
+                                   required />
+                        </td>
+                        <td class="border border-gray-300 p-2 text-center"><span class="totalPrice">0</span></td>
+                        <td class="border border-gray-300 p-2 text-center">
+                            <button type="button" class="removeRow w-full px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-between items-center">
+            <button type="button" 
+                    class="addRow px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Thêm Hàng
+            </button>
+            <div class="form-group w-1/3">
+                <label for="totalPrice" class="block text-sm font-medium text-gray-700">Tổng Tiền:</label>
+                <input type="text" 
+                       id="totalPrice" 
+                       class="total-price mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed"
+                       readonly />
+            </div>
+        </div>
+        <div class="flex space-x-4">
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Lưu
+            </button>
+            <a href="@Url.Action("List")" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                Hủy
+            </a>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Thêm hàng mới
+        $(".addRow").click(function () {
+            var row = $("#detailsTable tbody tr:first").clone();
+            row.find("input[name='quantities[]']").val("");
+            row.find(".totalPrice").text("0");
+            row.find(".product-select").val(row.find(".product-select option:first").val());
+            $("#detailsTable tbody").append(row);
+        });
+
+        // Xóa hàng
+        $(document).on("click", ".removeRow", function () {
+            $(this).closest("tr").remove();
+            updateTotal();
+        });
+
+        // Tính thành tiền và tổng tiền
+        $(document).on("change", ".qty-input, .product-select", function () {
+            var row = $(this).closest("tr");
+            var price = parseFloat(row.find(".product-select option:selected").attr("data-price")) || 0;
+            var qty = parseInt(row.find(".qty-input").val()) || 0;
+            row.find(".totalPrice").text((price * qty).toLocaleString());
+            updateTotal();
+        });
+
+        function updateTotal() {
+            var total = 0;
+            $("#detailsTable tbody tr").each(function () {
+                var rowTotal = parseFloat($(this).find(".totalPrice").text().replace(/,/g, "")) || 0;
+                total += rowTotal;
+            });
+            $(".total-price").val(total.toLocaleString());
+        }
+
+        // Khởi tạo lần đầu
+        updateTotal();
+
+        // Log dữ liệu trước khi submit
+        $("form").on("submit", function (e) {
+            var invoiceId = $("#InvoiceID").val();
+            var customerId = $("#CustomerID").val();
+            var productIds = [];
+            var quantities = [];
+            $("#detailsTable tbody tr").each(function () {
+                productIds.push($(this).find(".product-select").val());
+                quantities.push($(this).find(".qty-input").val());
+            });
+            var totalPrice = $(".total-price").val();
+
+            console.log("Submitting Data:");
+            console.log("InvoiceID: ", invoiceId);
+            console.log("CustomerID: ", customerId);
+            console.log("ProductIds: ", productIds);
+            console.log("Quantities: ", quantities);
+            console.log("TotalPrice: ", totalPrice);
+
+            // Cho phép submit tiếp tục
+            return true;
+        });
+    });
+</script>

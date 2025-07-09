@@ -1,0 +1,32 @@
+﻿@model System.Data.DataTable
+@{
+    ViewBag.Title = "Danh Sách Hóa Đơn";
+}
+<h2>Danh Sách Hóa Đơn</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Mã Hóa Đơn</th>
+            <th>Khách Hàng</th>
+            <th>Ngày Lập</th>
+            <th>Tổng Tiền</th>
+            <th>Thao Tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (System.Data.DataRow row in Model.Rows)
+        {
+            <tr>
+                <td>@row["InvoiceID"]</td>
+                <td>@row["CustomerName"]</td>
+                <td>@Convert.ToDateTime(row["InvoiceDate"]).ToString("dd/MM/yyyy")</td>
+                <td>@string.Format("{0:N0}", row["TotalPrice"])</td>
+                <td>
+                    <a href="@Url.Action("Edit", new { id = row["InvoiceID"] })" class="btn btn-primary">Sửa</a>
+                    <a href="@Url.Action("Delete", new { id = row["InvoiceID"] })" class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa không?');">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a href="@Url.Action("Add")" class="btn btn-success">Thêm Mới</a>

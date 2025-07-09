@@ -1,0 +1,30 @@
+﻿@model System.Data.DataTable
+@{
+    ViewBag.Title = "Danh Sách Sản Phẩm";
+}
+<h1>Danh Sách Sản Phẩm</h1>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Mã Sản Phẩm</th>
+            <th>Tên Sản Phẩm</th>
+            <th>Giá</th>
+            <th>Thao Tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (System.Data.DataRow row in Model.Rows)
+        {
+            <tr>
+                <td>@row["ProductID"]</td>
+                <td>@row["ProductName"]</td>
+                <td>@string.Format("{0:N0}", row["Price"]) VNĐ</td>
+                <td>
+                    <a href="@Url.Action("Edit", new { id = row["ProductID"] })" class="btn btn-primary">Sửa</a>
+                    <a href="@Url.Action("Delete", new { id = row["ProductID"] })" class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa không?');">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a href="@Url.Action("Add")" class="btn btn-success">Thêm Mới</a>

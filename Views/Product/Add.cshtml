@@ -1,0 +1,87 @@
+﻿@model StoreManagementSystem.Models.Product
+@{
+    ViewBag.Title = "Thêm Sản Phẩm";
+}
+<div class="container mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Thêm Sản Phẩm Mới</h2>
+    
+    @if (!string.IsNullOrEmpty(ViewBag.Message))
+    {
+        <div class="alert bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+            @ViewBag.Message
+        </div>
+    }
+
+    <form method="post" action="@Url.Action("Add")" class="space-y-6">
+        <div class="form-group">
+            <label for="ProductID" class="block text-sm font-medium text-gray-700">Mã Sản Phẩm <span class="text-red-500">*</span></label>
+            <input type="text" 
+                   name="ProductID" 
+                   id="ProductID" 
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                   required 
+                   pattern="[A-Za-z0-9]+" 
+                   title="Mã không được chứa khoảng trắng, chỉ cho phép chữ và số"
+                   oninput="this.value = this.value.toUpperCase()" />
+        </div>
+        <div class="form-group">
+            <label for="ProductName" class="block text-sm font-medium text-gray-700">Tên Sản Phẩm <span class="text-red-500">*</span></label>
+            <input type="text" 
+                   name="ProductName" 
+                   id="ProductName" 
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                   required />
+        </div>
+        <div class="form-group">
+            <label for="Price" class="block text-sm font-medium text-gray-700">Giá <span class="text-red-500">*</span></label>
+            <input type="number" 
+                   name="Price" 
+                   id="Price" 
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                   step="0.01" 
+                   required />
+        </div>
+        <div class="flex space-x-4">
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Lưu
+            </button>
+            <a href="@Url.Action("Add")" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Nhập Tiếp
+            </a>
+            <a href="@Url.Action("List")" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                Hủy
+            </a>
+        </div>
+    </form>
+</div>
+
+@section scripts {
+    <script>
+        // Thêm kiểm tra trùng mã sản phẩm (client-side) trước khi submit
+        $("form").on("submit", function (e) {
+            var productId = $("#ProductID").val().trim();
+            if (productId === "") {
+                alert("Vui lòng nhập mã sản phẩm!");
+                e.preventDefault();
+                return false;
+            }
+            // Gửi yêu cầu kiểm tra trùng mã (AJAX)
+            $.ajax({
+                url: '@Url.Action("CheckProductId", "Product")',
+                type: "GET",
+                data: { productId: productId },
+                async: false,
+                success: function (response) {
+                    if (response.exists) {
+                        alert("Mã sản phẩm đã tồn tại!");
+                        e.preventDefault();
+                    }
+                },
+                error: function () {
+                    alert("Lỗi khi kiểm tra mã sản phẩm!");
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}
